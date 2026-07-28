@@ -1,5 +1,5 @@
 /* ==========================================================
-   Easy Notes — Sticky Side Widget (v3)
+   Easy Notes — Sticky Side Widget (v4)
    Host on GitHub, then add ONE line in Blogger before </body>:
 
    <script src="https://cdn.jsdelivr.net/gh/USERNAME/REPO@main/easy-notes.js"></script>
@@ -7,7 +7,9 @@
    Flow:
    1) Bar sits fixed on the right edge, static, no looping animation.
    2) After 5s, a pointer fades in and "taps" the bar (one-time demo).
-   3) A wide red glossy bubble-wedge opens — 3 notes visible up front.
+   3) A red glossy chat-bubble wedge pops up from the bar's top-left
+      corner (messenger-style, with a connecting tail) — 3 notes
+      visible up front, fully rounded corners, no sharp edges.
    4) It smoothly auto-scrolls all the way through the list.
    5) The wedge then auto-closes back to just the bar.
    6) Everything (bar + every note) redirects to the link below.
@@ -35,18 +37,16 @@
   #enWidget *{box-sizing:border-box;}
   #enWidget{
     position:fixed;
-    top:40%;
+    top:calc(40% - 38px);
     right:0;
     transform:translateY(-50%);
     z-index:99999;
-    display:flex;
-    flex-direction:row-reverse;
-    align-items:flex-start;
     font-family:'Poppins',Arial,sans-serif;
   }
 
   /* ---- sticky vertical bar ---- */
   #enBar{
+    position:relative;
     width:32px;
     padding:14px 6px;
     background:linear-gradient(180deg,#7b2ff7,#5f0fdc);
@@ -58,7 +58,6 @@
     user-select:none;
     text-decoration:none;
     display:block;
-    position:relative;
     overflow:hidden;
     transition:box-shadow .3s ease, transform .3s ease;
   }
@@ -91,13 +90,13 @@
     100%{left:130%;opacity:0;}
   }
 
-  /* ---- pointer / tap indicator ---- */
+  /* ---- pointer / tap indicator, anchored near bar's top-left ---- */
   #enPointer{
     position:absolute;
-    top:50%;
+    top:2px;
     right:40px;
-    transform:translateY(-50%) translateX(14px) scale(.6);
-    font-size:22px;
+    transform:translateX(14px) scale(.6);
+    font-size:20px;
     opacity:0;
     pointer-events:none;
     filter:drop-shadow(0 3px 5px rgba(0,0,0,.35));
@@ -105,19 +104,19 @@
   }
   #enPointer.show{
     opacity:1;
-    transform:translateY(-50%) translateX(0) scale(1);
+    transform:translateX(0) scale(1);
   }
   #enPointer.tap{
     animation:enTap .35s ease-in-out;
   }
   @keyframes enTap{
-    0%{transform:translateY(-50%) translateX(0) scale(1);}
-    50%{transform:translateY(-50%) translateX(-4px) scale(.82);}
-    100%{transform:translateY(-50%) translateX(0) scale(1);}
+    0%{transform:translateX(0) scale(1);}
+    50%{transform:translateX(-4px) scale(.82);}
+    100%{transform:translateX(0) scale(1);}
   }
   .enRipple{
     position:absolute;
-    top:50%;left:0;
+    top:2px;left:4px;
     width:10px;height:10px;
     margin:-5px 0 0 -5px;
     border-radius:50%;
@@ -133,32 +132,47 @@
     100%{opacity:0;width:60px;height:60px;margin:-30px 0 0 -30px;}
   }
 
-  /* ---- wide red glossy bubble wedge (width > height) ---- */
+  /* ---- messenger-style chat bubble, popping from bar's top-left ---- */
   #enPanel{
+    position:absolute;
+    right:26px;                 /* just left of the bar */
+    bottom:calc(100% + 14px);   /* pops up ABOVE the bar's top edge */
     width:0;
     overflow:hidden;
     background:linear-gradient(160deg,#ff5b5b,#c41e1e 60%,#a30f0f);
-    border-radius:22px 6px 6px 22px;
-    box-shadow:-6px 10px 28px rgba(196,30,30,.45), 0 3px 10px rgba(0,0,0,.25);
+    border-radius:18px;         /* fully rounded — no sharp edges anywhere */
+    box-shadow:0 10px 26px rgba(196,30,30,.4), 0 3px 10px rgba(0,0,0,.22);
     opacity:0;
-    position:relative;
     transition:width .55s cubic-bezier(.4,0,.2,1), opacity .35s ease;
   }
-  /* glossy top-light sheen for "smooth lighting" feel */
+  /* glossy top-light sheen */
   #enPanel::before{
     content:"";
     position:absolute;
     top:0;left:0;right:0;
     height:45%;
+    border-radius:18px 18px 0 0;
     background:linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,0));
     pointer-events:none;
   }
+  /* connecting tail pointing down toward the bar's top-left corner */
+  #enPanel::after{
+    content:"";
+    position:absolute;
+    bottom:-6px;
+    right:16px;
+    width:14px;height:14px;
+    background:#a30f0f;
+    transform:rotate(45deg);
+    border-radius:3px;
+    box-shadow:2px 2px 4px rgba(0,0,0,.12);
+  }
   #enPanel.open{
-    width:200px;
+    width:230px;
     opacity:1;
   }
   #enPanelInner{
-    width:200px;
+    width:230px;
     padding:12px 12px 10px;
     position:relative;
   }
@@ -173,7 +187,6 @@
     text-shadow:0 1px 2px rgba(0,0,0,.25);
   }
 
-  /* fixed height = ~3 rows, rest reachable by smooth auto-scroll */
   #enList{
     list-style:none;
     margin:0;padding:0;
@@ -198,7 +211,7 @@
     color:#a30f0f;
     text-decoration:none;
     background:rgba(255,255,255,.92);
-    border-radius:8px;
+    border-radius:9px;
     box-shadow:0 2px 5px rgba(0,0,0,.15);
     transition:background .2s ease, box-shadow .2s ease, transform .15s ease;
     white-space:nowrap;
@@ -231,19 +244,19 @@
     '<a id="enBar" href="' + REDIRECT_LINK + '">' +
       '<span class="enShine"></span>' +
       '<span class="enBarText">Easy Notes</span>' +
+      '<div id="enPointer">👉</div>' +
+      '<div class="enRipple" id="enRipple"></div>' +
     '</a>' +
     '<div id="enPanel">' +
       '<div id="enPanelInner">' +
         '<div id="enPanelHead">Easy Notes</div>' +
         '<ul id="enList">' + itemsHtml + '</ul>' +
       '</div>' +
-    '</div>' +
-    '<div id="enPointer">👉</div>' +
-    '<div class="enRipple" id="enRipple"></div>';
+    '</div>';
 
   document.body.appendChild(wrap);
 
-  /* ---------- 4. SMOOTH MANUAL SCROLL (consistent across browsers) ---------- */
+  /* ---------- 4. SMOOTH MANUAL SCROLL ---------- */
   function smoothScrollTo(el, target, duration){
     var start = el.scrollTop;
     var change = target - start;
@@ -268,7 +281,6 @@
   var ripple  = document.getElementById('enRipple');
 
   setTimeout(function(){
-    // pointer fades in next to the bar
     pointer.classList.add('show');
 
     setTimeout(function(){
@@ -278,25 +290,22 @@
     }, 500);
 
     setTimeout(function(){
-      panel.classList.add('open'); // wedge opens
+      panel.classList.add('open');
     }, 850);
 
     setTimeout(function(){
       pointer.classList.remove('show');
     }, 1300);
 
-    // smooth auto-scroll through the whole list
     setTimeout(function(){
       var maxScroll = list.scrollHeight - list.clientHeight;
       smoothScrollTo(list, maxScroll, 2200);
     }, 1700);
 
-    // wedge auto-closes after the scroll finishes
     setTimeout(function(){
       panel.classList.remove('open');
     }, 4400);
 
-    // reset scroll position for next time (in case bar is clicked later)
     setTimeout(function(){
       list.scrollTop = 0;
     }, 5000);
