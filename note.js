@@ -154,11 +154,11 @@
     pointer-events:none;
   }
   #enPanel.open{
-    width:260px;
+    width:200px;
     opacity:1;
   }
   #enPanelInner{
-    width:260px;
+    width:200px;
     padding:12px 12px 10px;
     position:relative;
   }
