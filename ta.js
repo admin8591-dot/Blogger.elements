@@ -1,7 +1,7 @@
 /* ==========================================================
-   Easy Notes — Sticky Side Widget (v5)
-   Fixed: Wedge fully rounded, fixed position, 45° open
-   Easy color & text customization
+   Easy Notes — Sticky Side Widget (v6)
+   Fixed: No click animation, fixed bar, smooth popup
+   Auto-open after 6s, auto-close after scroll
    ========================================================== */
 (function(){
 
@@ -38,7 +38,7 @@
   var REDIRECT_LINK = "https://dmltquestionsodisha.blogspot.com/2026/05/blog-post_27.html?m=1";
 
   // ---- WEDGE WIDTH ----
-  var WEDGE_WIDTH = "200px"; // Make this smaller for shorter wedge
+  var WEDGE_WIDTH = "200px";
 
   /* ==========================================================
      END OF CUSTOMIZATION ZONE
@@ -74,8 +74,8 @@
     display:block;
     position:relative;
     overflow:hidden;
-    transition:box-shadow .3s ease;
     flex-shrink:0;
+    transition:box-shadow .3s ease;
   }
   #enBar:hover{
     box-shadow:-7px 12px 26px rgba(0,0,0,.4);
@@ -88,78 +88,20 @@
     letter-spacing:1px;
     white-space:nowrap;
   }
-  #enBar .enShine{
-    position:absolute;top:0;left:-70%;width:50%;height:100%;
-    background:linear-gradient(120deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.4) 50%,rgba(255,255,255,0) 100%);
-    transform:skewX(-15deg);
-    opacity:0;
-    pointer-events:none;
-  }
-  #enBar.demoTap .enShine{
-    animation:enSweep .8s ease-in-out;
-  }
-  @keyframes enSweep{
-    0%{left:-70%;opacity:0;}
-    20%{opacity:1;}
-    80%{opacity:1;}
-    100%{left:130%;opacity:0;}
-  }
 
-  /* ---- pointer ---- */
-  #enPointer{
-    position:absolute;
-    top:50%;
-    right:40px;
-    transform:translateY(-50%) translateX(14px) scale(.6);
-    font-size:22px;
-    opacity:0;
-    pointer-events:none;
-    filter:drop-shadow(0 3px 5px rgba(0,0,0,.35));
-    transition:opacity .35s ease, transform .35s ease;
-  }
-  #enPointer.show{
-    opacity:1;
-    transform:translateY(-50%) translateX(0) scale(1);
-  }
-  #enPointer.tap{
-    animation:enTap .35s ease-in-out;
-  }
-  @keyframes enTap{
-    0%{transform:translateY(-50%) translateX(0) scale(1);}
-    50%{transform:translateY(-50%) translateX(-4px) scale(.82);}
-    100%{transform:translateY(-50%) translateX(0) scale(1);}
-  }
-  .enRipple{
-    position:absolute;
-    top:50%;left:0;
-    width:10px;height:10px;
-    margin:-5px 0 0 -5px;
-    border-radius:50%;
-    border:2px solid #fff;
-    opacity:0;
-    pointer-events:none;
-  }
-  .enRipple.play{
-    animation:enRippleOut .55s ease-out;
-  }
-  @keyframes enRippleOut{
-    0%{opacity:.85;width:10px;height:10px;margin:-5px 0 0 -5px;}
-    100%{opacity:0;width:60px;height:60px;margin:-30px 0 0 -30px;}
-  }
-
-  /* ---- WEDGE - FULLY ROUNDED, NO SHARP EDGES ---- */
+  /* ---- WEDGE - Smooth popup animation (small to normal) ---- */
   #enPanel{
     width:0;
     overflow:hidden;
     background:linear-gradient(160deg,${COLORS.wedgeTop},${COLORS.wedgeMid} 60%,${COLORS.wedgeBottom});
-    border-radius:22px 22px 22px 22px; /* FULLY ROUNDED all corners */
+    border-radius:22px 22px 22px 22px;
     box-shadow:-6px 10px 28px rgba(196,30,30,.45), 0 3px 10px rgba(0,0,0,.25);
     opacity:0;
     position:relative;
-    transition:width .55s cubic-bezier(.4,0,.2,1), opacity .35s ease, transform .35s ease;
+    transform: scale(0.5) translateX(20px);
     transform-origin: right center;
-    /* Position: opens upward at 45° */
-    transform: translateY(0) scale(0.95);
+    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    /* Smooth popup: small → normal */
   }
   /* glossy top-light sheen */
   #enPanel::before{
@@ -174,7 +116,8 @@
   #enPanel.open{
     width: ${WEDGE_WIDTH};
     opacity:1;
-    transform: translateY(-45%) scale(1); /* Opens upward at 45° angle */
+    transform: scale(1) translateX(0);
+    /* Smooth popup to normal size */
   }
   #enPanelInner{
     width: ${WEDGE_WIDTH};
@@ -262,18 +205,15 @@
   var wrap = document.createElement('div');
   wrap.id = 'enWidget';
   wrap.innerHTML =
-    '<a id="enBar" href="' + REDIRECT_LINK + '">' +
-      '<span class="enShine"></span>' +
+    '<div id="enBar">' +
       '<span class="enBarText">Easy Notes</span>' +
-    '</a>' +
+    '</div>' +
     '<div id="enPanel">' +
       '<div id="enPanelInner">' +
         '<div id="enPanelHead"><a href="' + REDIRECT_LINK + '">📋 Easy Notes</a></div>' +
         '<ul id="enList">' + itemsHtml + '</ul>' +
       '</div>' +
-    '</div>' +
-    '<div id="enPointer">👆</div>' +
-    '<div class="enRipple" id="enRipple"></div>';
+    '</div>';
 
   document.body.appendChild(wrap);
 
@@ -294,60 +234,45 @@
     requestAnimationFrame(step);
   }
 
-  /* ---------- 5. DEMO SEQUENCE ---------- */
-  var bar     = document.getElementById('enBar');
-  var panel   = document.getElementById('enPanel');
-  var list    = document.getElementById('enList');
-  var pointer = document.getElementById('enPointer');
-  var ripple  = document.getElementById('enRipple');
+  /* ---------- 5. AUTO SEQUENCE: After 6s popup, scroll, auto-close ---------- */
+  var panel = document.getElementById('enPanel');
+  var list = document.getElementById('enList');
+  var bar = document.getElementById('enBar');
 
+  // After 6 seconds, open with smooth popup animation
   setTimeout(function(){
-    pointer.classList.add('show');
+    panel.classList.add('open');
+  }, 6000);
 
-    setTimeout(function(){
-      pointer.classList.add('tap');
-      ripple.classList.add('play');
-      bar.classList.add('demoTap');
-    }, 500);
+  // After popup, scroll through notes
+  setTimeout(function(){
+    var maxScroll = list.scrollHeight - list.clientHeight;
+    if (maxScroll > 0) {
+      smoothScrollTo(list, maxScroll, 2500);
+    }
+  }, 7000);
 
-    setTimeout(function(){
-      panel.classList.add('open');
-    }, 850);
+  // Auto-close after scroll completes
+  setTimeout(function(){
+    panel.classList.remove('open');
+  }, 10000);
 
-    setTimeout(function(){
-      pointer.classList.remove('show');
-    }, 1300);
+  // Reset scroll position after closing
+  setTimeout(function(){
+    list.scrollTop = 0;
+  }, 10500);
 
-    setTimeout(function(){
-      var maxScroll = list.scrollHeight - list.clientHeight;
-      if (maxScroll > 0) {
-        smoothScrollTo(list, maxScroll, 2200);
-      }
-    }, 1700);
-
-    setTimeout(function(){
-      panel.classList.remove('open');
-    }, 4400);
-
-    setTimeout(function(){
-      list.scrollTop = 0;
-    }, 5000);
-
-  }, 5000);
-
-  /* ---------- 6. CLICK HANDLING: WEDGE OPENS AT 45° ---------- */
-  // Click on "Easy Notes" bar toggles wedge at 45° angle
-  document.getElementById('enBar').addEventListener('click', function(e) {
+  /* ---------- 6. BAR CLICK: Toggle wedge (no animation) ---------- */
+  bar.addEventListener('click', function(e) {
     e.preventDefault();
     panel.classList.toggle('open');
     
-    // If opening, reset scroll to top
     if (panel.classList.contains('open')) {
       list.scrollTop = 0;
     }
   });
 
-  // Click on panel header also toggles
+  // Panel header click also toggles
   document.querySelector('#enPanelHead a').addEventListener('click', function(e) {
     e.preventDefault();
     panel.classList.toggle('open');
