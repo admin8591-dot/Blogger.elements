@@ -1,12 +1,28 @@
 /* ==========================================================
-   Easy Notes — Sticky Side Widget (v4)
-   Fixed: Wedge smooth edges, proper positioning, click fixes
+   Easy Notes — Sticky Side Widget (v5)
+   Fixed: Wedge fully rounded, fixed position, 45° open
+   Easy color & text customization
    ========================================================== */
 (function(){
 
-  /* ---------- EDIT HERE ---------- */
-  var REDIRECT_LINK = "https://dmltquestionsodisha.blogspot.com/2026/05/blog-post_27.html?m=1";
+  /* ==========================================================
+     🎨 EASY CUSTOMIZATION ZONE
+     Change colors and text here
+     ========================================================== */
+  
+  // ---- COLORS (change these hex codes) ----
+  var COLORS = {
+    barTop: "#7b2ff7",        // Bar gradient top
+    barBottom: "#5f0fdc",     // Bar gradient bottom
+    wedgeTop: "#ff5b5b",      // Wedge gradient top
+    wedgeMid: "#c41e1e",      // Wedge gradient middle
+    wedgeBottom: "#a30f0f",   // Wedge gradient bottom
+    textLight: "#fff",        // White text color
+    noteBg: "rgba(255,255,255,.92)",  // Note background
+    noteText: "#a30f0f"       // Note text color
+  };
 
+  // ---- NOTES (add/remove/edit titles here) ----
   var NOTES = [
     "Liver Function Tests",
     "Culture Media",
@@ -17,6 +33,16 @@
     "PT/INR Test",
     "Urine Examination"
   ];
+
+  // ---- REDIRECT LINK ----
+  var REDIRECT_LINK = "https://dmltquestionsodisha.blogspot.com/2026/05/blog-post_27.html?m=1";
+
+  // ---- WEDGE WIDTH ----
+  var WEDGE_WIDTH = "200px"; // Make this smaller for shorter wedge
+
+  /* ==========================================================
+     END OF CUSTOMIZATION ZONE
+     ========================================================== */
 
   /* ---------- 1. INJECT CSS ---------- */
   var css = `
@@ -33,12 +59,12 @@
     font-family:'Poppins',Arial,sans-serif;
   }
 
-  /* ---- sticky vertical bar ---- */
+  /* ---- sticky vertical bar (NEVER MOVES) ---- */
   #enBar{
     width:32px;
     padding:14px 6px;
-    background:linear-gradient(180deg,#7b2ff7,#5f0fdc);
-    color:#fff;
+    background:linear-gradient(180deg,${COLORS.barTop},${COLORS.barBottom});
+    color:${COLORS.textLight};
     border-radius:14px 0 0 14px;
     box-shadow:-5px 8px 20px rgba(0,0,0,.32);
     text-align:center;
@@ -48,11 +74,11 @@
     display:block;
     position:relative;
     overflow:hidden;
-    transition:box-shadow .3s ease, transform .3s ease;
+    transition:box-shadow .3s ease;
+    flex-shrink:0;
   }
   #enBar:hover{
     box-shadow:-7px 12px 26px rgba(0,0,0,.4);
-    transform:translateX(-2px);
   }
   #enBar .enBarText{
     writing-mode:vertical-rl;
@@ -79,7 +105,7 @@
     100%{left:130%;opacity:0;}
   }
 
-  /* ---- pointer / tap indicator (positioned on the left side of bar) ---- */
+  /* ---- pointer ---- */
   #enPointer{
     position:absolute;
     top:50%;
@@ -121,21 +147,19 @@
     100%{opacity:0;width:60px;height:60px;margin:-30px 0 0 -30px;}
   }
 
-  /* ---- wide red glossy bubble wedge (smooth rounded edges) ---- */
+  /* ---- WEDGE - FULLY ROUNDED, NO SHARP EDGES ---- */
   #enPanel{
     width:0;
     overflow:hidden;
-    background:linear-gradient(160deg,#ff5b5b,#c41e1e 60%,#a30f0f);
-    border-radius:22px 0 0 22px;
+    background:linear-gradient(160deg,${COLORS.wedgeTop},${COLORS.wedgeMid} 60%,${COLORS.wedgeBottom});
+    border-radius:22px 22px 22px 22px; /* FULLY ROUNDED all corners */
     box-shadow:-6px 10px 28px rgba(196,30,30,.45), 0 3px 10px rgba(0,0,0,.25);
     opacity:0;
     position:relative;
-    transition:width .55s cubic-bezier(.4,0,.2,1), opacity .35s ease;
-    /* Smooth all edges */
-    border-top-left-radius: 22px;
-    border-bottom-left-radius: 22px;
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
+    transition:width .55s cubic-bezier(.4,0,.2,1), opacity .35s ease, transform .35s ease;
+    transform-origin: right center;
+    /* Position: opens upward at 45° */
+    transform: translateY(0) scale(0.95);
   }
   /* glossy top-light sheen */
   #enPanel::before{
@@ -145,21 +169,22 @@
     height:45%;
     background:linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,0));
     pointer-events:none;
-    border-radius:22px 0 0 0;
+    border-radius:22px 22px 0 0;
   }
   #enPanel.open{
-    width:260px;
+    width: ${WEDGE_WIDTH};
     opacity:1;
+    transform: translateY(-45%) scale(1); /* Opens upward at 45° angle */
   }
   #enPanelInner{
-    width:260px;
+    width: ${WEDGE_WIDTH};
     padding:12px 12px 10px;
     position:relative;
   }
   #enPanelHead{
     font-size:12px;
     font-weight:700;
-    color:#fff;
+    color:${COLORS.textLight};
     letter-spacing:.4px;
     margin-bottom:8px;
     padding-bottom:6px;
@@ -168,12 +193,12 @@
     cursor:pointer;
   }
   #enPanelHead a{
-    color:#fff;
+    color:${COLORS.textLight};
     text-decoration:none;
     display:block;
   }
 
-  /* fixed height = ~3 rows, rest reachable by smooth auto-scroll */
+  /* list container - scrollable */
   #enList{
     list-style:none;
     margin:0;padding:0;
@@ -195,9 +220,9 @@
     padding:0 10px;
     font-size:11.5px;
     font-weight:600;
-    color:#a30f0f;
+    color:${COLORS.noteText};
     text-decoration:none;
-    background:rgba(255,255,255,.92);
+    background:${COLORS.noteBg};
     border-radius:8px;
     box-shadow:0 2px 5px rgba(0,0,0,.15);
     transition:background .2s ease, box-shadow .2s ease, transform .15s ease;
@@ -212,7 +237,7 @@
     transform:translateX(-2px);
   }
 
-  /* Click indicator on notes */
+  /* Click indicator */
   .enItem a::after {
     content: " →";
     font-size: 12px;
@@ -252,7 +277,7 @@
 
   document.body.appendChild(wrap);
 
-  /* ---------- 4. SMOOTH MANUAL SCROLL ---------- */
+  /* ---------- 4. SMOOTH SCROLL ---------- */
   function smoothScrollTo(el, target, duration){
     var start = el.scrollTop;
     var change = target - start;
@@ -269,7 +294,7 @@
     requestAnimationFrame(step);
   }
 
-  /* ---------- 5. ONE-TIME DEMO SEQUENCE ---------- */
+  /* ---------- 5. DEMO SEQUENCE ---------- */
   var bar     = document.getElementById('enBar');
   var panel   = document.getElementById('enPanel');
   var list    = document.getElementById('enList');
@@ -277,7 +302,6 @@
   var ripple  = document.getElementById('enRipple');
 
   setTimeout(function(){
-    // pointer fades in
     pointer.classList.add('show');
 
     setTimeout(function(){
@@ -294,7 +318,6 @@
       pointer.classList.remove('show');
     }, 1300);
 
-    // auto-scroll through list
     setTimeout(function(){
       var maxScroll = list.scrollHeight - list.clientHeight;
       if (maxScroll > 0) {
@@ -302,24 +325,36 @@
       }
     }, 1700);
 
-    // auto-close wedge
     setTimeout(function(){
       panel.classList.remove('open');
     }, 4400);
 
-    // reset scroll
     setTimeout(function(){
       list.scrollTop = 0;
     }, 5000);
 
   }, 5000);
 
-  /* ---------- 6. CLICK HANDLING FIX ---------- */
-  // Make sure all clickable elements work
-  document.querySelectorAll('#enBar, #enPanelHead a, .enItem a').forEach(function(el) {
-    el.addEventListener('click', function(e) {
-      // Already has href, just ensure it works
-    });
+  /* ---------- 6. CLICK HANDLING: WEDGE OPENS AT 45° ---------- */
+  // Click on "Easy Notes" bar toggles wedge at 45° angle
+  document.getElementById('enBar').addEventListener('click', function(e) {
+    e.preventDefault();
+    panel.classList.toggle('open');
+    
+    // If opening, reset scroll to top
+    if (panel.classList.contains('open')) {
+      list.scrollTop = 0;
+    }
+  });
+
+  // Click on panel header also toggles
+  document.querySelector('#enPanelHead a').addEventListener('click', function(e) {
+    e.preventDefault();
+    panel.classList.toggle('open');
+    
+    if (panel.classList.contains('open')) {
+      list.scrollTop = 0;
+    }
   });
 
 })();
