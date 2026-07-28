@@ -1,7 +1,6 @@
 /* ==========================================================
-   Easy Notes — Sticky Side Widget (v6)
-   Fixed: No click animation, fixed bar, smooth popup
-   Auto-open after 6s, auto-close after scroll
+   Easy Notes — Sticky Side Widget (v7)
+   Click anywhere → redirect to link
    ========================================================== */
 (function(){
 
@@ -87,6 +86,7 @@
     font-weight:600;
     letter-spacing:1px;
     white-space:nowrap;
+    pointer-events:none;
   }
 
   /* ---- WEDGE - Smooth popup animation (small to normal) ---- */
@@ -101,7 +101,7 @@
     transform: scale(0.5) translateX(20px);
     transform-origin: right center;
     transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-    /* Smooth popup: small → normal */
+    cursor:pointer;
   }
   /* glossy top-light sheen */
   #enPanel::before{
@@ -117,12 +117,12 @@
     width: ${WEDGE_WIDTH};
     opacity:1;
     transform: scale(1) translateX(0);
-    /* Smooth popup to normal size */
   }
   #enPanelInner{
     width: ${WEDGE_WIDTH};
     padding:12px 12px 10px;
     position:relative;
+    pointer-events:none;
   }
   #enPanelHead{
     font-size:12px;
@@ -133,12 +133,13 @@
     padding-bottom:6px;
     border-bottom:1px solid rgba(255,255,255,.3);
     text-shadow:0 1px 2px rgba(0,0,0,.25);
-    cursor:pointer;
+    pointer-events:none;
   }
   #enPanelHead a{
     color:${COLORS.textLight};
     text-decoration:none;
     display:block;
+    pointer-events:none;
   }
 
   /* list container - scrollable */
@@ -150,6 +151,7 @@
     gap:6px;
     height:84px;
     overflow-y:hidden;
+    pointer-events:none;
   }
 
   .enItem{
@@ -172,7 +174,7 @@
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
-    cursor:pointer;
+    pointer-events:none;
   }
   .enItem a:hover{
     background:#fff;
@@ -210,7 +212,7 @@
     '</div>' +
     '<div id="enPanel">' +
       '<div id="enPanelInner">' +
-        '<div id="enPanelHead"><a href="' + REDIRECT_LINK + '">📋 Easy Notes</a></div>' +
+        '<div id="enPanelHead">📋 Easy Notes</div>' +
         '<ul id="enList">' + itemsHtml + '</ul>' +
       '</div>' +
     '</div>';
@@ -234,7 +236,13 @@
     requestAnimationFrame(step);
   }
 
-  /* ---------- 5. AUTO SEQUENCE: After 6s popup, scroll, auto-close ---------- */
+  /* ---------- 5. REDIRECT FUNCTION ---------- */
+  function redirectToLink(e) {
+    e.preventDefault();
+    window.location.href = REDIRECT_LINK;
+  }
+
+  /* ---------- 6. AUTO SEQUENCE: After 6s popup, scroll, auto-close ---------- */
   var panel = document.getElementById('enPanel');
   var list = document.getElementById('enList');
   var bar = document.getElementById('enBar');
@@ -262,24 +270,16 @@
     list.scrollTop = 0;
   }, 10500);
 
-  /* ---------- 6. BAR CLICK: Toggle wedge (no animation) ---------- */
-  bar.addEventListener('click', function(e) {
-    e.preventDefault();
-    panel.classList.toggle('open');
-    
-    if (panel.classList.contains('open')) {
-      list.scrollTop = 0;
-    }
-  });
+  /* ---------- 7. CLICK ANYWHERE → REDIRECT ---------- */
+  // Click on bar redirects
+  bar.addEventListener('click', redirectToLink);
 
-  // Panel header click also toggles
-  document.querySelector('#enPanelHead a').addEventListener('click', function(e) {
-    e.preventDefault();
-    panel.classList.toggle('open');
-    
-    if (panel.classList.contains('open')) {
-      list.scrollTop = 0;
-    }
+  // Click on panel (wedge) redirects
+  panel.addEventListener('click', redirectToLink);
+
+  // Click on individual note items also redirect (if any direct clicks)
+  document.querySelectorAll('.enItem a').forEach(function(el) {
+    el.addEventListener('click', redirectToLink);
   });
 
 })();
