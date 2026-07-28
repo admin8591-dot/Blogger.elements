@@ -1,28 +1,36 @@
 /* ==========================================================
-   Easy Notes — Animated Sticky Side Widget
+   Easy Notes — Sticky Side Widget (v2)
    Host on GitHub, then add ONE line in Blogger before </body>:
 
    <script src="https://cdn.jsdelivr.net/gh/USERNAME/REPO@main/easy-notes.js"></script>
 
    Flow:
-   1) Small green dot pulses on the right edge for the first 5s
-   2) Dot morphs into a vertical "Easy Notes" sticky bar
-   3) Clicking the bar opens a flyout panel — items reveal with a
-      skeleton-loading shimmer, one after another
-   4) X closes the panel back down to just the sticky bar
+   1) Bar sits fixed on the right edge, visible immediately, no
+      looping animation.
+   2) After 5s, a small pointer fades in and "taps" the bar —
+      one-time motion-graphic style demo.
+   3) The wedge (panel) opens showing the notes list, but only
+      3 items are visible at a time (scrollable). A short
+      auto-scroll demo shows there's more, then settles back.
+   4) EVERYTHING in the widget (bar + every note) redirects to
+      the single link below.
    ========================================================== */
 (function(){
 
-  /* ---------- EDIT YOUR NOTES + LINKS HERE ---------- */
+  /* ---------- EDIT HERE ---------- */
+  var REDIRECT_LINK = "https://dmltquestionsodisha.blogspot.com/2026/05/blog-post_27.html?m=1";
+
   var NOTES = [
-    { title: "Liver Function Tests",                    link: "https://dmltquestionsodisha.blogspot.com/2026/05/blog-post_27.html?m=1" },
-    { title: "Culture Media",                            link: "https://dmltquestionsodisha.blogspot.com/2026/05/blog-post_27.html?m=1" },
-    { title: "Colorimeter (Beer's & Lambert's Law)",     link: "https://dmltquestionsodisha.blogspot.com/2026/05/blog-post_27.html?m=1" },
-    { title: "Morphology of Bacteria",                   link: "https://dmltquestionsodisha.blogspot.com/2026/05/blog-post_27.html?m=1" },
-    { title: "Lipid Profile Tests",                      link: "https://dmltquestionsodisha.blogspot.com/2026/05/blog-post_27.html?m=1" },
-    { title: "Fat Soluble Vitamins",                     link: "https://dmltquestionsodisha.blogspot.com/2026/05/blog-post_27.html?m=1" },
-    { title: "PT/INR Test",                              link: "https://dmltquestionsodisha.blogspot.com/2026/05/blog-post_27.html?m=1" },
-    { title: "Urine Examination",                        link: "https://dmltquestionsodisha.blogspot.com/2026/05/blog-post_27.html?m=1" }
+    "Liver Function Tests",
+    "Culture Media",
+    "Colorimeter (Beer's & Lambert's Law)",
+    "Morphology of Bacteria",
+    "Lipid Profile Tests",
+    "Fat Soluble Vitamins",
+    "PT/INR Test",
+    "Urine Examination"
+    // 👆 add / remove / rename note titles here — all of them
+    // link to REDIRECT_LINK above automatically.
   ];
 
   /* ---------- 1. INJECT CSS ---------- */
@@ -40,189 +48,195 @@
     font-family:'Poppins',Arial,sans-serif;
   }
 
-  /* ---- green dot (first 5s) ---- */
-  #enDot{
-    width:16px;height:16px;
-    margin:4px 6px 0 0;
-    border-radius:50%;
-    background:radial-gradient(circle at 35% 35%,#5CFF7A,#1FA83C);
-    box-shadow:0 0 0 rgba(31,168,60,.6);
-    animation:enDotPulse 1.4s ease-in-out infinite;
-    opacity:1;
-    transition:opacity .4s ease, transform .4s ease;
-  }
-  #enDot.hide{
-    opacity:0;
-    transform:scale(.3);
-    pointer-events:none;
-  }
-  @keyframes enDotPulse{
-    0%{box-shadow:0 0 0 0 rgba(31,168,60,.55);}
-    70%{box-shadow:0 0 0 12px rgba(31,168,60,0);}
-    100%{box-shadow:0 0 0 0 rgba(31,168,60,0);}
-  }
-
-  /* ---- sticky vertical bar ---- */
+  /* ---- sticky vertical bar (visible immediately, static) ---- */
   #enBar{
-    width:34px;
-    padding:22px 6px;
+    width:32px;
+    padding:14px 6px;
     background:linear-gradient(180deg,#7b2ff7,#5f0fdc);
     color:#fff;
-    border-radius:16px 0 0 16px;
-    box-shadow:-6px 10px 26px rgba(0,0,0,.35);
+    border-radius:14px 0 0 14px;
+    box-shadow:-5px 8px 20px rgba(0,0,0,.32);
     text-align:center;
     cursor:pointer;
     user-select:none;
-    opacity:0;
-    transform:scale(.4);
-    transition:transform .45s cubic-bezier(.34,1.4,.64,1), opacity .4s ease, box-shadow .3s ease;
-  }
-  #enBar.show{
-    opacity:1;
-    transform:scale(1);
+    text-decoration:none;
+    display:block;
+    position:relative;
+    overflow:hidden;
+    transition:box-shadow .3s ease, transform .3s ease;
   }
   #enBar:hover{
-    box-shadow:-8px 14px 32px rgba(0,0,0,.45);
-    transform:scale(1.04) translateX(-2px);
+    box-shadow:-7px 12px 26px rgba(0,0,0,.4);
+    transform:translateX(-2px);
   }
   #enBar .enBarText{
     writing-mode:vertical-rl;
     transform:rotate(180deg);
-    font-size:13px;
+    font-size:12.5px;
     font-weight:600;
     letter-spacing:1px;
     white-space:nowrap;
   }
+  /* one-time shine sweep across the bar during the demo tap */
+  #enBar .enShine{
+    position:absolute;top:0;left:-70%;width:50%;height:100%;
+    background:linear-gradient(120deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.4) 50%,rgba(255,255,255,0) 100%);
+    transform:skewX(-15deg);
+    opacity:0;
+    pointer-events:none;
+  }
+  #enBar.demoTap .enShine{
+    animation:enSweep .8s ease-in-out;
+  }
+  @keyframes enSweep{
+    0%{left:-70%;opacity:0;}
+    20%{opacity:1;}
+    80%{opacity:1;}
+    100%{left:130%;opacity:0;}
+  }
 
-  /* ---- flyout panel ---- */
+  /* ---- pointer / tap indicator (one-time demo, local to widget) ---- */
+  #enPointer{
+    position:absolute;
+    top:50%;
+    right:40px;
+    transform:translateY(-50%) translateX(14px) scale(.6);
+    font-size:22px;
+    opacity:0;
+    pointer-events:none;
+    filter:drop-shadow(0 3px 5px rgba(0,0,0,.35));
+    transition:opacity .35s ease, transform .35s ease;
+  }
+  #enPointer.show{
+    opacity:1;
+    transform:translateY(-50%) translateX(0) scale(1);
+  }
+  #enPointer.tap{
+    animation:enTap .35s ease-in-out;
+  }
+  @keyframes enTap{
+    0%{transform:translateY(-50%) translateX(0) scale(1);}
+    50%{transform:translateY(-50%) translateX(-4px) scale(.82);}
+    100%{transform:translateY(-50%) translateX(0) scale(1);}
+  }
+  .enRipple{
+    position:absolute;
+    top:50%;left:0;
+    width:10px;height:10px;
+    margin:-5px 0 0 -5px;
+    border-radius:50%;
+    border:2px solid #fff;
+    opacity:0;
+    pointer-events:none;
+  }
+  .enRipple.play{
+    animation:enRippleOut .55s ease-out;
+  }
+  @keyframes enRippleOut{
+    0%{opacity:.85;width:10px;height:10px;margin:-5px 0 0 -5px;}
+    100%{opacity:0;width:60px;height:60px;margin:-30px 0 0 -30px;}
+  }
+
+  /* ---- flyout wedge panel ---- */
   #enPanel{
     width:0;
-    max-height:420px;
     overflow:hidden;
     background:#fff;
-    border-radius:16px 0 0 16px;
-    box-shadow:-6px 10px 26px rgba(0,0,0,.3);
+    border-radius:14px 0 0 14px;
+    box-shadow:-5px 8px 20px rgba(0,0,0,.28);
     opacity:0;
-    transition:width .45s cubic-bezier(.4,0,.2,1), opacity .35s ease;
+    transition:width .5s cubic-bezier(.4,0,.2,1), opacity .35s ease;
   }
   #enPanel.open{
-    width:250px;
+    width:230px;
     opacity:1;
   }
   #enPanelInner{
-    width:250px;
-    padding:14px 14px 16px;
+    width:230px;
+    padding:10px 10px 8px;
   }
-
   #enPanelHead{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    margin-bottom:10px;
-    padding-bottom:8px;
-    border-bottom:1px solid #eee;
-  }
-  #enPanelHead h4{
-    margin:0;
-    font-size:14px;
+    font-size:12px;
     font-weight:700;
     color:#5f0fdc;
     letter-spacing:.3px;
-  }
-  #enClose{
-    width:22px;height:22px;
-    border-radius:50%;
-    background:#f2effc;
-    color:#5f0fdc;
-    border:none;
-    font-size:14px;
-    line-height:1;
-    cursor:pointer;
-    display:flex;align-items:center;justify-content:center;
-    transition:background .2s ease, transform .2s ease;
-  }
-  #enClose:hover{
-    background:#e4dcfb;
-    transform:rotate(90deg);
+    margin-bottom:6px;
+    padding-bottom:6px;
+    border-bottom:1px solid #eee;
   }
 
+  /* only 3 items visible — fixed height, rest scrolls */
   #enList{
     list-style:none;
     margin:0;padding:0;
     display:flex;
     flex-direction:column;
-    gap:8px;
+    gap:6px;
+    height:84px;        /* ~3 items (24px) + 2 gaps (6px) */
+    overflow-y:auto;
+    scroll-behavior:smooth;
+    scrollbar-width:thin;
+    scrollbar-color:#c9b6f7 #f4f0fc;
   }
+  #enList::-webkit-scrollbar{width:4px;}
+  #enList::-webkit-scrollbar-thumb{background:#c9b6f7;border-radius:4px;}
+
   .enItem{
-    position:relative;
-    height:32px;
-    border-radius:8px;
-    overflow:hidden;
+    flex:0 0 24px;
+    height:24px;
   }
-  .enSkeleton{
-    position:absolute;
-    inset:0;
-    border-radius:8px;
-    background:linear-gradient(90deg,#eee 25%,#f6f6f6 37%,#eee 63%);
-    background-size:400% 100%;
-    animation:enShimmer 1.2s ease-in-out infinite;
-    opacity:1;
-  }
-  @keyframes enShimmer{
-    0%{background-position:100% 50%;}
-    100%{background-position:0 50%;}
-  }
-  .enText{
-    position:absolute;
-    inset:0;
+  .enItem a{
     display:flex;
     align-items:center;
-    padding:0 10px;
-    font-size:12.5px;
+    height:100%;
+    padding:0 8px;
+    font-size:11.5px;
     font-weight:500;
     color:#333;
     text-decoration:none;
-    border-radius:8px;
-    opacity:0;
     background:#f7f4ff;
-    transition:background .2s ease;
+    border-radius:7px;
+    box-shadow:0 1px 3px rgba(0,0,0,.06);
+    transition:background .2s ease, box-shadow .2s ease, transform .15s ease;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
   }
-  .enText:hover{ background:#efe7ff; color:#5f0fdc; }
+  .enItem a:hover{
+    background:#efe4ff;
+    color:#5f0fdc;
+    box-shadow:0 3px 8px rgba(95,15,220,.18);
+    transform:translateX(-2px);
+  }
 
-  /* staggered reveal — only fires while panel has .open */
-  #enPanel.open .enItem:nth-child(1) .enSkeleton{ animation:enShimmer 1.2s ease-in-out, enSkelOut .01s linear forwards .55s; }
-  #enPanel.open .enItem:nth-child(2) .enSkeleton{ animation:enShimmer 1.2s ease-in-out, enSkelOut .01s linear forwards .65s; }
-  #enPanel.open .enItem:nth-child(3) .enSkeleton{ animation:enShimmer 1.2s ease-in-out, enSkelOut .01s linear forwards .75s; }
-  #enPanel.open .enItem:nth-child(4) .enSkeleton{ animation:enShimmer 1.2s ease-in-out, enSkelOut .01s linear forwards .85s; }
-  #enPanel.open .enItem:nth-child(5) .enSkeleton{ animation:enShimmer 1.2s ease-in-out, enSkelOut .01s linear forwards .95s; }
-  #enPanel.open .enItem:nth-child(6) .enSkeleton{ animation:enShimmer 1.2s ease-in-out, enSkelOut .01s linear forwards 1.05s; }
-  #enPanel.open .enItem:nth-child(7) .enSkeleton{ animation:enShimmer 1.2s ease-in-out, enSkelOut .01s linear forwards 1.15s; }
-  #enPanel.open .enItem:nth-child(8) .enSkeleton{ animation:enShimmer 1.2s ease-in-out, enSkelOut .01s linear forwards 1.25s; }
-  @keyframes enSkelOut{ to{ opacity:0; } }
-
-  #enPanel.open .enItem:nth-child(1) .enText{ animation:enTextIn .4s ease forwards .6s; }
-  #enPanel.open .enItem:nth-child(2) .enText{ animation:enTextIn .4s ease forwards .7s; }
-  #enPanel.open .enItem:nth-child(3) .enText{ animation:enTextIn .4s ease forwards .8s; }
-  #enPanel.open .enItem:nth-child(4) .enText{ animation:enTextIn .4s ease forwards .9s; }
-  #enPanel.open .enItem:nth-child(5) .enText{ animation:enTextIn .4s ease forwards 1.0s; }
-  #enPanel.open .enItem:nth-child(6) .enText{ animation:enTextIn .4s ease forwards 1.1s; }
-  #enPanel.open .enItem:nth-child(7) .enText{ animation:enTextIn .4s ease forwards 1.2s; }
-  #enPanel.open .enItem:nth-child(8) .enText{ animation:enTextIn .4s ease forwards 1.3s; }
-  @keyframes enTextIn{
-    0%{opacity:0; transform:translateX(6px);}
-    100%{opacity:1; transform:translateX(0);}
+  /* bouncing scroll hint, shown briefly to indicate more items */
+  #enScrollHint{
+    display:flex;
+    justify-content:center;
+    margin-top:4px;
+    font-size:11px;
+    color:#a98af0;
+    opacity:0;
+    transition:opacity .3s ease;
+  }
+  #enScrollHint.show{
+    opacity:1;
+    animation:enBounce 1.1s ease-in-out 3;
+  }
+  @keyframes enBounce{
+    0%,100%{transform:translateY(0);}
+    50%{transform:translateY(3px);}
   }
   `;
   var styleTag = document.createElement('style');
   styleTag.textContent = css;
   document.head.appendChild(styleTag);
 
-  /* ---------- 2. BUILD LIST ITEMS HTML ---------- */
-  var itemsHtml = NOTES.map(function(n){
+  /* ---------- 2. BUILD LIST HTML ---------- */
+  var itemsHtml = NOTES.map(function(title){
     return (
       '<li class="enItem">' +
-        '<div class="enSkeleton"></div>' +
-        '<a class="enText" href="' + n.link + '" target="_blank" rel="noopener">' + n.title + '</a>' +
+        '<a href="' + REDIRECT_LINK + '">' + title + '</a>' +
       '</li>'
     );
   }).join('');
@@ -231,50 +245,62 @@
   var wrap = document.createElement('div');
   wrap.id = 'enWidget';
   wrap.innerHTML =
-    '<div id="enBar">' +
-      '<div class="enBarText">Easy Notes</div>' +
-    '</div>' +
+    '<a id="enBar" href="' + REDIRECT_LINK + '">' +
+      '<span class="enShine"></span>' +
+      '<span class="enBarText">Easy Notes</span>' +
+    '</a>' +
     '<div id="enPanel">' +
       '<div id="enPanelInner">' +
-        '<div id="enPanelHead">' +
-          '<h4>Easy Notes</h4>' +
-          '<button id="enClose" aria-label="Close">&times;</button>' +
-        '</div>' +
+        '<div id="enPanelHead">Easy Notes</div>' +
         '<ul id="enList">' + itemsHtml + '</ul>' +
+        '<div id="enScrollHint">▾ scroll for more</div>' +
       '</div>' +
     '</div>' +
-    '<div id="enDot"></div>';
+    '<div id="enPointer">👉</div>' +
+    '<div class="enRipple" id="enRipple"></div>';
 
   document.body.appendChild(wrap);
 
-  /* ---------- 4. BEHAVIOUR ---------- */
-  var dot   = document.getElementById('enDot');
-  var bar   = document.getElementById('enBar');
-  var panel = document.getElementById('enPanel');
-  var closeBtn = document.getElementById('enClose');
+  /* ---------- 4. ONE-TIME DEMO SEQUENCE (after 5s) ---------- */
+  var bar     = document.getElementById('enBar');
+  var panel   = document.getElementById('enPanel');
+  var list    = document.getElementById('enList');
+  var pointer = document.getElementById('enPointer');
+  var ripple  = document.getElementById('enRipple');
+  var hint    = document.getElementById('enScrollHint');
 
-  // Stage 1 -> 2 : green dot pulses for 5s, then morphs into the bar
   setTimeout(function(){
-    dot.classList.add('hide');
-    bar.classList.add('show');
+    // pointer fades in next to the bar
+    pointer.classList.add('show');
+
+    setTimeout(function(){
+      // pointer "taps"
+      pointer.classList.add('tap');
+      ripple.classList.add('play');
+      bar.classList.add('demoTap');
+    }, 500);
+
+    setTimeout(function(){
+      // wedge opens
+      panel.classList.add('open');
+    }, 850);
+
+    setTimeout(function(){
+      // pointer fades away, no longer needed
+      pointer.classList.remove('show');
+    }, 1300);
+
+    setTimeout(function(){
+      // show scroll hint + gentle auto-scroll demo (down then back)
+      hint.classList.add('show');
+      list.scrollTop = 48; // reveal item 4 & 5 partially
+    }, 1600);
+
+    setTimeout(function(){
+      list.scrollTop = 0; // settle back to top 3 items
+      hint.classList.remove('show');
+    }, 2600);
+
   }, 5000);
-
-  function openPanel(){
-    panel.classList.remove('open');
-    void panel.offsetWidth; // force reflow so the reveal animation replays every time
-    panel.classList.add('open');
-  }
-  function closePanel(){
-    panel.classList.remove('open');
-  }
-
-  bar.addEventListener('click', function(){
-    if (panel.classList.contains('open')) closePanel();
-    else openPanel();
-  });
-  closeBtn.addEventListener('click', function(e){
-    e.stopPropagation();
-    closePanel();
-  });
 })();
 
