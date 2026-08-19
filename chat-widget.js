@@ -1,10 +1,9 @@
-/* ===== MLT PATHSHALA CHAT WIDGET (self-injecting bundle) =====
-   Host this file on GitHub, then in Blogger just add:
+/* ===== MLT PATHSHALA CHAT WIDGET — floating fixed bubble version =====
+   Position no longer depends on where the <script> tag sits in the DOM.
+   It always floats bottom-right, above everything, with a proper shadow.
 
-   <div id="cw-mount"></div>
-   <script src="YOUR_CDN_LINK_HERE"></script>
-
-   That's it -- no other code needs to sit inside Blogger.
+   Blogger usage — paste ANYWHERE (Page HTML, Post HTML, or a Layout Gadget):
+   <script src='https://cdn.jsdelivr.net/gh/admin8591-dot/Blogger.elements@main/chat-widget.js'></script>
 */
 (function () {
   var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwRRoALYWJ5wD0Sv2JotoXNsn5AR6oHYEYhdbcejV8OX8m5njNsuANcHEKurM_ZlHxj/exec';
@@ -13,9 +12,29 @@
   // ---------- 1. Inject CSS ----------
   var css = `
 #cw-root *{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
-#cw-box{max-width:440px;margin:12px auto;border-radius:16px;overflow:hidden;background:#ffffff;border:2px solid rgba(0,0,0,0.12);box-shadow:0 6px 20px rgba(0,0,0,0.12);display:flex;flex-direction:column;position:relative;transition:all 0.3s ease}
-#cw-header{background:#1a1a1a;color:#fff;padding:8px 14px;font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0}
-#cw-dot{width:7px;height:7px;border-radius:50%;background:#4ade80;display:inline-block;box-shadow:0 0 8px rgba(74,222,128,0.4);animation:cwPulse 2s infinite}
+
+/* Floating fixed panel — always bottom-right, always visible regardless of
+   where this script/div physically sits in the page's HTML. */
+#cw-box{
+  position:fixed;
+  bottom:16px;
+  right:16px;
+  width:340px;
+  max-width:calc(100vw - 24px);
+  margin:0;
+  border-radius:16px;
+  overflow:hidden;
+  background:#ffffff;
+  border:1px solid rgba(0,0,0,0.08);
+  box-shadow:0 12px 40px rgba(0,0,0,0.22), 0 2px 8px rgba(0,0,0,0.10);
+  display:flex;
+  flex-direction:column;
+  z-index:999999;
+  transition:all 0.25s ease;
+}
+
+#cw-header{background:#1a1a1a;color:#fff;padding:10px 14px;font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0;cursor:default}
+#cw-dot{width:7px;height:7px;border-radius:50%;background:#4ade80;display:inline-block;box-shadow:0 0 8px rgba(74,222,128,0.5);animation:cwPulse 2s infinite}
 @keyframes cwPulse{0%,100%{opacity:1}50%{opacity:0.5}}
 #cw-title{flex:1;font-size:13px}
 #cw-toggle-container{display:flex;align-items:center;margin-left:auto}
@@ -24,54 +43,64 @@
 #cw-toggle-label::after{content:'';position:absolute;top:1.5px;left:1.5px;width:13px;height:13px;background:#fff;border-radius:50%;transition:transform 0.3s ease;box-shadow:0 1px 3px rgba(0,0,0,0.2)}
 #cw-toggle:checked + #cw-toggle-label{background:#4ade80}
 #cw-toggle:checked + #cw-toggle-label::after{transform:translateX(14px)}
-#cw-body{display:flex;flex-direction:column;overflow:hidden;transition:all 0.3s ease}
+
+#cw-body{display:flex;flex-direction:column;overflow:hidden;transition:all 0.25s ease}
 #cw-body.cw-hidden{display:none !important}
-#cw-messages{flex:1;overflow-y:auto;padding:8px 12px;background:#f0f2f5;display:flex;flex-direction:column;max-height:400px}
-#cw-messages::-webkit-scrollbar{display:none}
-#cw-messages{scrollbar-width:none;-ms-overflow-style:none}
+
+#cw-messages{flex:1;overflow-y:auto;padding:10px 12px;background:#f0f2f5;display:flex;flex-direction:column;max-height:360px;min-height:220px}
+#cw-messages::-webkit-scrollbar{width:4px}
+#cw-messages::-webkit-scrollbar-thumb{background:#d0d0d8;border-radius:3px}
+#cw-messages{scrollbar-width:thin}
+
 #cw-loadOlder{text-align:center;color:#2d2d2d;font-size:10px;font-weight:600;cursor:pointer;padding:4px;display:none;background:rgba(0,0,0,0.03);border-radius:8px;margin-bottom:4px;border:1px solid rgba(0,0,0,0.04);transition:all 0.2s}
 #cw-loadOlder:hover{background:rgba(0,0,0,0.06)}
-.cw-date-divider{text-align:center;margin:6px 0 8px}
-.cw-date-divider span{background:rgba(255,255,255,0.8);color:#666;font-size:10px;font-weight:600;padding:2px 14px;border-radius:12px;display:inline-block;border:1px solid rgba(0,0,0,0.04)}
+.cw-date-divider{text-align:center;margin:8px 0 8px}
+.cw-date-divider span{background:rgba(255,255,255,0.9);color:#666;font-size:10px;font-weight:600;padding:3px 14px;border-radius:12px;display:inline-block;border:1px solid rgba(0,0,0,0.05);box-shadow:0 1px 3px rgba(0,0,0,0.04)}
 .cw-row{display:flex;animation:cwFadeIn 0.15s ease}
 .cw-row.me{justify-content:flex-end}
 .cw-row.them{justify-content:flex-start}
 @keyframes cwFadeIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
-.cw-bubble{max-width:78%;padding:4px 12px;border-radius:12px;font-size:12.5px;line-height:1.3;word-wrap:break-word;box-shadow:0 1px 4px rgba(0,0,0,0.02);position:relative;transition:all 0.2s}
-.cw-row.me .cw-bubble{color:#fff;border-bottom-right-radius:2px}
-.cw-row.them .cw-bubble{color:#333;border-bottom-left-radius:2px;border:1px solid rgba(0,0,0,0.06)}
+.cw-bubble{max-width:78%;padding:6px 12px;border-radius:12px;font-size:12.5px;line-height:1.35;word-wrap:break-word;box-shadow:0 1px 3px rgba(0,0,0,0.06);position:relative;transition:all 0.2s}
+.cw-row.me .cw-bubble{color:#fff;border-bottom-right-radius:3px}
+.cw-row.them .cw-bubble{color:#333;border-bottom-left-radius:3px;border:1px solid rgba(0,0,0,0.06);background:#fff}
 .cw-header-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:1px;gap:8px}
 .cw-name{font-size:9.5px;font-weight:700;letter-spacing:0.1px}
 .cw-row.me .cw-name{color:rgba(255,255,255,0.8)}
 .cw-row.them .cw-name{color:#2d2d2d}
-.cw-time{font-size:8px;opacity:0.4;white-space:nowrap}
-.cw-row.me .cw-time{color:rgba(255,255,255,0.5)}
+.cw-time{font-size:8px;opacity:0.45;white-space:nowrap}
+.cw-row.me .cw-time{color:rgba(255,255,255,0.55)}
 .cw-row.them .cw-time{color:#999}
-.cw-msg-text{word-break:break-word;margin-top:0px;font-weight:400;font-size:12px}
-.cw-row.me .cw-msg-text{color:#fff}
-.cw-row.them .cw-msg-text{color:#333}
-#cw-inputRow{display:flex;gap:6px;padding:8px 12px;background:#ffffff;border-top:2px solid rgba(0,0,0,0.06);flex-shrink:0}
-#cw-input{flex:1;border:1px solid rgba(0,0,0,0.08);border-radius:16px;padding:8px 14px;font-size:12px;outline:none;background:#f8f9fc;transition:all 0.2s;color:#333}
-#cw-input:focus{border-color:#2d2d2d;background:#ffffff;box-shadow:0 0 0 2px rgba(0,0,0,0.04)}
+.cw-msg-text{word-break:break-word;font-weight:400;font-size:12px}
+
+#cw-inputRow{display:flex;gap:6px;padding:9px 12px;background:#ffffff;border-top:1px solid rgba(0,0,0,0.07);flex-shrink:0}
+#cw-input{flex:1;border:1px solid rgba(0,0,0,0.09);border-radius:16px;padding:8px 14px;font-size:12.5px;outline:none;background:#f8f9fc;transition:all 0.2s;color:#333}
+#cw-input:focus{border-color:#2d2d2d;background:#ffffff;box-shadow:0 0 0 2px rgba(0,0,0,0.05)}
 #cw-input::placeholder{color:#aaa;font-size:11.5px}
-#cw-send{background:#2d2d2d;color:#fff;border:none;border-radius:16px;padding:0 16px;font-size:11.5px;font-weight:600;cursor:pointer;transition:all 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
-#cw-send:hover{transform:scale(1.03);background:#1a1a1a;box-shadow:0 3px 12px rgba(0,0,0,0.12)}
+#cw-send{background:#2d2d2d;color:#fff;border:none;border-radius:16px;padding:0 16px;font-size:11.5px;font-weight:600;cursor:pointer;transition:all 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+#cw-send:hover{background:#000}
 #cw-send:active{transform:scale(0.95)}
 #cw-send:disabled{opacity:0.4;cursor:default;transform:none}
-#cw-nameOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);align-items:center;justify-content:center;z-index:9999}
-#cw-nameCard{background:#ffffff;padding:24px 20px;border-radius:18px;max-width:300px;width:90%;text-align:center;border:2px solid rgba(0,0,0,0.06);box-shadow:0 20px 60px rgba(0,0,0,0.12)}
+
+#cw-nameOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;z-index:1000000;padding:16px}
+#cw-nameCard{background:#ffffff;padding:24px 20px;border-radius:18px;max-width:300px;width:100%;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)}
 #cw-nameCard h3{margin:0 0 2px;font-size:17px;color:#222;font-weight:700}
 #cw-nameCard p{margin:0 0 12px;font-size:12.5px;color:#888}
-#cw-nameInput{width:100%;padding:8px 12px;border-radius:10px;border:1px solid rgba(0,0,0,0.08);font-size:13px;margin-bottom:10px;outline:none;background:#f8f9fc;transition:all 0.2s;color:#333}
-#cw-nameInput:focus{border-color:#2d2d2d;box-shadow:0 0 0 2px rgba(0,0,0,0.04)}
-#cw-nameOk{width:100%;background:#2d2d2d;color:#fff;border:none;border-radius:10px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,0.08);transition:all 0.2s}
-#cw-nameOk:hover{transform:scale(1.02);background:#1a1a1a;box-shadow:0 3px 16px rgba(0,0,0,0.12)}
+#cw-nameInput{width:100%;padding:9px 12px;border-radius:10px;border:1px solid rgba(0,0,0,0.09);font-size:13px;margin-bottom:10px;outline:none;background:#f8f9fc;color:#333}
+#cw-nameInput:focus{border-color:#2d2d2d}
+#cw-nameOk{width:100%;background:#2d2d2d;color:#fff;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:700;cursor:pointer}
+#cw-nameOk:hover{background:#000}
+
+/* Small phones: keep panel comfortably sized, slightly closer to edges */
+@media (max-width:400px){
+  #cw-box{right:8px;bottom:8px;width:calc(100vw - 16px)}
+  #cw-messages{max-height:52vh}
+}
 `;
   var styleTag = document.createElement('style');
   styleTag.textContent = css;
   document.head.appendChild(styleTag);
 
-  // ---------- 2. Inject HTML ----------
+  // ---------- 2. Inject HTML (always appended to <body>, so fixed positioning is reliable) ----------
   var html = `
 <div id="cw-root">
   <div id="cw-box">
@@ -104,11 +133,8 @@
   </div>
 </div>`;
 
-  var mount = document.getElementById('cw-mount');
-  if (!mount) {
-    mount = document.createElement('div');
-    document.body.appendChild(mount);
-  }
+  var mount = document.createElement('div');
+  document.body.appendChild(mount);
   mount.innerHTML = html;
 
   // ---------- 3. Chat logic ----------
@@ -190,8 +216,7 @@
       bubble.appendChild(msgSpan);
       if (!isMe) {
         var msgColor = getMessageColor(m.name || 'Unknown');
-        bubble.style.background = msgColor + '22';
-        bubble.style.borderColor = msgColor + '44';
+        bubble.style.borderColor = msgColor + '55';
         bubble.querySelector('.cw-name').style.color = msgColor;
       } else {
         bubble.style.background = 'linear-gradient(135deg,#4a6cf7,#6a3de8)';
@@ -219,7 +244,7 @@
       if (prev) {
         var currentUser = current.classList.contains('me') ? 'me' : 'them';
         var prevUser = prev.classList.contains('me') ? 'me' : 'them';
-        current.style.marginTop = (currentUser === prevUser) ? '3px' : '5px';
+        current.style.marginTop = (currentUser === prevUser) ? '3px' : '6px';
       } else {
         current.style.marginTop = '0';
       }
@@ -300,3 +325,4 @@
 
   loadInitial();
 })();
+
